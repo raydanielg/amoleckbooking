@@ -1,0 +1,23 @@
+# Root .htaccess for cPanel when document root points to project root
+# Recommended: point your domain's DocumentRoot to /public for best security.
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Prevent direct access to sensitive files
+  RewriteRule ^\.env - [F,L]
+  RewriteRule ^storage/ - [F,L]
+  RewriteRule ^vendor/ - [F,L]
+  RewriteRule ^node_modules/ - [F,L]
+
+  # If the request is for an existing file or directory inside /public, serve it directly
+  RewriteCond %{DOCUMENT_ROOT}/public/$1 -f [OR]
+  RewriteCond %{DOCUMENT_ROOT}/public/$1 -d
+  RewriteRule ^(.*)$ /public/$1 [L]
+
+  # Otherwise, route everything to Laravel's front controller in /public
+  RewriteRule ^ index.php [L]
+</IfModule>
+
+# Fallback if mod_rewrite is not available
+DirectoryIndex index.php
