@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Services\SmsService;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -32,6 +33,10 @@ new #[Layout('layouts.auth-split')] class extends Component
 
         // Keep raw password before hashing for welcome SMS (requested)
         $rawPassword = $validated['password'];
+        // Default role to patient (only if column exists to prevent insert error prior to migration)
+        if (Schema::hasColumn('users', 'role')) {
+            $validated['role'] = \App\Models\User::ROLE_PATIENT;
+        }
         $validated['password'] = Hash::make($validated['password']);
 
         event(new Registered($user = User::create($validated)));

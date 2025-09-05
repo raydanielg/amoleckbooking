@@ -28,4 +28,12 @@ Route::middleware('auth')->group(function () {
 
     Volt::route('confirm-password', 'pages.auth.confirm-password')
         ->name('password.confirm');
+
+    // Logout
+    Route::post('logout', function () {
+        \Illuminate\Support\Facades\Auth::logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+        return redirect('/');
+    })->name('logout');
 });

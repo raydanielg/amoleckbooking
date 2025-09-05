@@ -20,7 +20,16 @@ new #[Layout('layouts.auth-split')] class extends Component
 
         Session::regenerate();
 
-        $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+        // Default route based on role; redirectIntended still respects intended URL
+        $role = auth()->user()->role ?? null;
+        if ($role === \App\Models\User::ROLE_ADMIN) {
+            $defaultRoute = route('admin.dashboard', absolute: false);
+        } elseif ($role === \App\Models\User::ROLE_DOCTOR) {
+            $defaultRoute = route('doctor.dashboard', absolute: false);
+        } else {
+            $defaultRoute = route('patient.dashboard', absolute: false);
+        }
+        $this->redirectIntended(default: $defaultRoute, navigate: true);
     }
 }; ?>
 

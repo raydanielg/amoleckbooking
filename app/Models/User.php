@@ -22,6 +22,7 @@ class User extends Authenticatable
         'phone',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -44,6 +45,27 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'settings' => 'array',
         ];
+    }
+
+    // Role constants
+    public const ROLE_ADMIN = 'admin';
+    public const ROLE_DOCTOR = 'doctor';
+    public const ROLE_PATIENT = 'patient';
+
+    public function isAdmin(): bool
+    {
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function isDoctor(): bool
+    {
+        return $this->role === self::ROLE_DOCTOR;
+    }
+
+    public function isPatient(): bool
+    {
+        return $this->role === self::ROLE_PATIENT;
     }
 }
