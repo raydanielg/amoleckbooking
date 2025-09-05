@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Services\SmsService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -29,11 +30,28 @@ new #[Layout('layouts.auth-split')] class extends Component
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        // Keep raw password before hashing for welcome SMS (requested)
+        $rawPassword = $validated['password'];
         $validated['password'] = Hash::make($validated['password']);
 
         event(new Registered($user = User::create($validated)));
 
         Auth::login($user);
+
+        // Send welcome SMS (name, email, phone, password) as requested
+        try {
+            /** @var SmsService $sms */
+            $sms = app(SmsService::class);
+            $name = $user->name;
+            $phone = $user->phone;
+            $email = $user->email ?: '-';
+            $msg = "Karibu, $name! Akaunti yako imeundwa. Jina: $name, Simu: $phone, Barua pepe: $email, Nenosiri: $rawPassword";
+            $sms->send($phone, $msg, [
+                'language' => 'English', // set to 'Unicode' if you need Unicode SMS
+            ]);
+        } catch (\Throwable $e) {
+            // Optionally log: \Log::warning('SMS send failed: '.$e->getMessage());
+        }
 
         $this->redirect(route('dashboard', absolute: false), navigate: true);
     }

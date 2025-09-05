@@ -1,10 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Password;
+use App\Models\User;
+use App\Services\SmsService;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.guest')] class extends Component
+new #[Layout('layouts.auth-split')] class extends Component
 {
     public string $email = '';
 
@@ -30,32 +32,51 @@ new #[Layout('layouts.guest')] class extends Component
             return;
         }
 
+        // Also send a short code via SMS alongside the email reset link
+        try {
+            $user = User::where('email', $this->email)->first();
+            if ($user && !empty($user->phone)) {
+                $code = (string) random_int(100000, 999999);
+                $msg = "Reset code yako ni: $code. Pia tumekutumia email yenye link ya kubadili nenosiri.";
+                /** @var SmsService $sms */
+                $sms = app(SmsService::class);
+                $sms->send($user->phone, $msg, ['language' => 'English']);
+            }
+        } catch (\Throwable $e) {
+            // Silently ignore SMS failures to not block UX
+        }
+
         $this->reset('email');
 
         session()->flash('status', __($status));
     }
 }; ?>
 
-<div>
-    <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-        {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
+<div class="space-y-6">
+    <div class="space-y-1">
+        <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">Forgot your password?</h2>
+        <p class="text-sm text-gray-600 dark:text-gray-400">Enter your email and we will send you a reset link</p>
     </div>
 
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
-    <form wire:submit="sendPasswordResetLink">
+    <form wire:submit="sendPasswordResetLink" class="space-y-4">
         <!-- Email Address -->
-        <div>
+        <div class="space-y-1">
             <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autofocus />
+            <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autofocus placeholder="you@example.com" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
-        <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
+        <div class="flex items-center justify-between mt-4">
+            <a href="{{ route('login') }}" class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-primary-700 dark:hover:text-primary-300" wire:navigate>Back to sign in</a>
+            <x-primary-button class="bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700">
                 {{ __('Email Password Reset Link') }}
             </x-primary-button>
         </div>
     </form>
+    <p class="text-sm text-gray-600 dark:text-gray-400">Don't have an account?
+        <a href="{{ route('register') }}" class="text-primary-700 hover:underline" wire:navigate>Sign up</a>
+    </p>
 </div>
