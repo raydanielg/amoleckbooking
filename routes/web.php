@@ -32,6 +32,11 @@ use App\Http\Controllers\Patient\MessagesController;
 use App\Http\Controllers\Patient\SettingsController;
 use App\Http\Controllers\Doctor\MessagesController as DoctorMessagesController;
 use App\Http\Controllers\Doctor\AppointmentsController as DoctorAppointmentsController;
+use App\Http\Controllers\Admin\UsersController as AdminUsersController;
+use App\Http\Controllers\Admin\AppointmentsController as AdminAppointmentsController;
+use App\Http\Controllers\Admin\MessagesController as AdminMessagesController;
+use App\Http\Controllers\Admin\NotificationsController as AdminNotificationsController;
+use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 Route::get('/account', [DashboardController::class, 'index'])
     ->middleware(['auth', 'role:patient'])
     ->name('patient.dashboard');
@@ -58,6 +63,26 @@ Route::middleware(['auth', 'role:patient'])->group(function () {
 Route::view('/admin', 'admin.dashboard')
     ->middleware(['auth', 'role:admin'])
     ->name('admin.dashboard');
+
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin/users', [AdminUsersController::class, 'index'])->name('admin.users.index');
+    Route::view('/admin/doctors', 'admin.doctors.index')->name('admin.doctors.index');
+    Route::get('/admin/appointments', [AdminAppointmentsController::class, 'index'])->name('admin.appointments.index');
+    Route::get('/admin/appointments/{appointment}', [AdminAppointmentsController::class, 'show'])->name('admin.appointments.show');
+    Route::post('/admin/appointments/{appointment}/status', [AdminAppointmentsController::class, 'updateStatus'])->name('admin.appointments.status');
+    Route::post('/admin/appointments/{appointment}/reschedule', [AdminAppointmentsController::class, 'reschedule'])->name('admin.appointments.reschedule');
+    Route::post('/admin/appointments/{appointment}/messages', [AdminAppointmentsController::class, 'sendMessage'])->name('admin.appointments.messages.send');
+    Route::post('/admin/appointments/{appointment}/history', [AdminAppointmentsController::class, 'addHistory'])->name('admin.appointments.history.add');
+    Route::get('/admin/messages', [AdminMessagesController::class, 'index'])->name('admin.messages.index');
+    Route::post('/admin/messages/broadcast', [AdminMessagesController::class, 'broadcast'])->name('admin.messages.broadcast');
+    Route::get('/admin/notifications', [AdminNotificationsController::class, 'index'])->name('admin.notifications.index');
+    Route::post('/admin/notifications/{notification}/read', [AdminNotificationsController::class, 'markRead'])->name('admin.notifications.mark');
+    Route::post('/admin/notifications/read-all', [AdminNotificationsController::class, 'markAll'])->name('admin.notifications.mark_all');
+    Route::get('/admin/settings', [AdminSettingsController::class, 'index'])->name('admin.settings.index');
+    Route::post('/admin/settings/maintenance/enable', [AdminSettingsController::class, 'enableMaintenance'])->name('admin.settings.maintenance.enable');
+    Route::post('/admin/settings/maintenance/disable', [AdminSettingsController::class, 'disableMaintenance'])->name('admin.settings.maintenance.disable');
+    Route::post('/admin/settings/branding', [AdminSettingsController::class, 'updateBranding'])->name('admin.settings.branding');
+});
 
 // Doctor Area
 Route::view('/doctor', 'doctor.dashboard')

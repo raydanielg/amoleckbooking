@@ -49,4 +49,9 @@ class Appointment extends Model
     {
         return $this->hasMany(Message::class)->orderBy('created_at');
     }
+
+    public function histories(): HasMany
+    {
+        return $this->hasMany(AppointmentHistory::class)->orderByDesc('created_at');
+    }
 }

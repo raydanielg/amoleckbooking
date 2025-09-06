@@ -14,7 +14,11 @@ class AdminUserSeeder extends Seeder
         $name = env('ADMIN_NAME', 'System Admin');
         $phone = env('ADMIN_PHONE', '0700000000');
         $email = env('ADMIN_EMAIL', 'admin@example.com');
-        $password = env('ADMIN_PASSWORD', Str::random(12));
+        // If no ADMIN_PASSWORD is provided in .env, use a deterministic default for local/dev
+        $password = env('ADMIN_PASSWORD');
+        if (empty($password)) {
+            $password = 'Admin@12345';
+        }
 
         // Prefer matching by email if provided, otherwise by phone
         $attributes = [];
@@ -45,10 +49,6 @@ class AdminUserSeeder extends Seeder
         $this->command?->line('  Phone:    ' . $user->phone);
         $this->command?->line('  Email:    ' . $user->email);
         $this->command?->line('  Role:     ' . ($user->role ?? '(none)'));
-        if (env('ADMIN_PASSWORD')) {
-            $this->command?->line('  Password: (from .env)');
-        } else {
-            $this->command?->line('  Password: (randomly generated during seed)');
-        }
+        $this->command?->line('  Password: ' . (env('ADMIN_PASSWORD') ?: 'Admin@12345'));
     }
 }
